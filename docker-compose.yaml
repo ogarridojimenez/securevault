@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: securevault
+      POSTGRES_USER: securevault
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U securevault"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  securevault:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SV_DB_URL: "postgres://securevault:changeme@postgres:5432/securevault?sslmode=disable"
+      SV_JWT_SECRET: "dev-jwt-secret-not-for-production-32bytes!"
+      SV_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      SV_SERVER_PORT: "8080"
+      SV_SERVER_HOST: "0.0.0.0"
+      SV_RATE_LIMIT: "1000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

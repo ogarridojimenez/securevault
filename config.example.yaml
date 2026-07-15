@@ -1,0 +1,16 @@
+server:
+  port: 8080
+  host: "0.0.0.0"
+
+db:
+  url: "postgres://securevault:changeme@localhost:5432/securevault?sslmode=disable"
+
+jwt:
+  secret: "change-this-to-a-32-byte-secret-in-production!"
+  access_ttl: "15m"
+  refresh_ttl: "168h"
+
+encryption:
+  key: ""  # 32-byte hex key for AES-256-GCM (REQUIRED)
+
+rate_limit: 100

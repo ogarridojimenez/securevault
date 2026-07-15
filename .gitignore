@@ -1,0 +1,50 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+vault
+server
+securevault
+securevault.exe
+cmd/server/server
+cmd/vault/vault
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of go coverage
+*.out
+*.cov
+
+# Build outputs
+securevault-server
+securevault-cli
+
+# Dependency directories
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config
+config.yaml
+.vault_token
+
+# Docker
+docker-compose.override.yaml
+
+# Go workspace
+go.work
+go.work.sum
+
+# Temp
+tmp/

@@ -1,0 +1,445 @@
+openapi: "3.1.0"
+info:
+  title: SecureVault API
+  description: Professional secrets management API
+  version: "1.0.0"
+  contact:
+    name: SecureVault
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [Health]
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+
+  /readiness:
+    get:
+      summary: Readiness check
+      tags: [Health]
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+
+  /auth/register:
+    post:
+      summary: Register new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "409":
+          description: Email already registered
+
+  /auth/login:
+    post:
+      summary: Login
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid refresh token
+
+  /auth/logout:
+    post:
+      summary: Logout
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token: { type: string }
+      responses:
+        "200":
+          description: Logged out
+
+  /vaults:
+    get:
+      summary: List vaults
+      tags: [Vaults]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Vault list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vaults:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Vault"
+                  total: { type: integer }
+    post:
+      summary: Create vault
+      tags: [Vaults]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVaultRequest"
+      responses:
+        "201":
+          description: Vault created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vault"
+
+  /vaults/{vaultID}:
+    get:
+      summary: Get vault
+      tags: [Vaults]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vaultID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Vault details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vault"
+        "404":
+          description: Vault not found
+    put:
+      summary: Update vault
+      tags: [Vaults]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vaultID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVaultRequest"
+      responses:
+        "200":
+          description: Vault updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vault"
+    delete:
+      summary: Delete vault
+      tags: [Vaults]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vaultID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Vault deleted
+
+  /vaults/{vaultID}/secrets:
+    get:
+      summary: List secrets in vault
+      tags: [Secrets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vaultID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Secret list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecretListResponse"
+    post:
+      summary: Create secret
+      tags: [Secrets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vaultID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSecretRequest"
+      responses:
+        "201":
+          description: Secret created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Secret"
+
+  /vaults/{vaultID}/secrets/{secretID}:
+    get:
+      summary: Get secret value
+      tags: [Secrets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vaultID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: secretID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Secret value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecretValueResponse"
+        "404":
+          description: Secret not found
+    delete:
+      summary: Delete secret
+      tags: [Secrets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vaultID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: secretID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Secret deleted
+
+  /api-keys:
+    get:
+      summary: List API keys
+      tags: [API Keys]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: API key list
+    post:
+      summary: Create API key
+      tags: [API Keys]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAPIKeyRequest"
+      responses:
+        "201":
+          description: API key created
+
+  /api-keys/{keyID}/revoke:
+    put:
+      summary: Revoke API key
+      tags: [API Keys]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: keyID
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: API key revoked
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        user_id: { type: string, format: uuid }
+
+    Vault:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    CreateVaultRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+
+    UpdateVaultRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+
+    Secret:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        vault_id: { type: string, format: uuid }
+        name: { type: string }
+        metadata: { type: object }
+        version: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    SecretSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        vault_id: { type: string, format: uuid }
+        name: { type: string }
+        metadata: { type: object }
+        version: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    SecretListResponse:
+      type: object
+      properties:
+        secrets:
+          type: array
+          items:
+            $ref: "#/components/schemas/SecretSummary"
+        total: { type: integer }
+
+    CreateSecretRequest:
+      type: object
+      required: [name, value]
+      properties:
+        name: { type: string }
+        value: { type: string }
+        metadata: { type: object }
+
+    SecretValueResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        value: { type: string }
+
+    CreateAPIKeyRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
