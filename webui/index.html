@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureVault</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;--text-muted:#8b949e;--primary:#58a6ff;--primary-hover:#79b8ff;--danger:#f85149;--success:#3fb950;--warning:#d29922;--radius:6px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:20px;font-weight:600;color:var(--primary)}
+header h1 span{color:var(--text);font-weight:300}
+.auth-badge{font-size:12px;padding:4px 12px;border-radius:20px;background:var(--border);color:var(--text-muted)}
+.auth-badge.logged{background:#1a3a2a;color:var(--success)}
+.main{max-width:960px;margin:0 auto;padding:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card h2{font-size:16px;margin-bottom:12px;color:var(--text)}
+.form-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+input,select,button{font-family:inherit;font-size:14px;border-radius:var(--radius);padding:8px 12px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;transition:border-color .2s}
+input:focus,select:focus{border-color:var(--primary)}
+button{cursor:pointer;font-weight:500}
+.btn{background:var(--primary);color:#0d1117;border-color:var(--primary)}
+.btn:hover{background:var(--primary-hover)}
+.btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn-danger:hover{opacity:.85}
+.btn-outline{background:transparent;border-color:var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--text-muted)}
+.btn-sm{padding:4px 10px;font-size:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:14px}
+th{color:var(--text-muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+tr:hover td{background:rgba(88,166,255,.04)}
+.actions{display:flex;gap:6px}
+.actions button{font-size:12px}
+.secret-value{font-family:'SF Mono','Cascadia Code',monospace;background:var(--bg);padding:4px 8px;border-radius:4px;font-size:13px;word-break:break-all}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--radius);color:#fff;font-size:14px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.success{background:#1a3a2a;border:1px solid var(--success)}
+.toast.error{background:#3a1a1a;border:1px solid var(--danger)}
+.hidden{display:none!important}
+.empty-state{padding:40px 20px;text-align:center;color:var(--text-muted)}
+.empty-state p{margin-top:8px;font-size:14px}
+.loading{text-align:center;padding:20px;color:var(--text-muted)}
+.metadata{font-size:12px;color:var(--text-muted);margin-top:4px}
+.tab-bar{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)}
+.tab{padding:10px 20px;cursor:pointer;font-size:14px;color:var(--text-muted);border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.key-display{background:var(--bg);padding:12px;border-radius:var(--radius);border:1px solid var(--success);font-family:monospace;font-size:13px;word-break:break-all;margin:8px 0}
+.key-display .label{color:var(--text-muted);font-size:11px;text-transform:uppercase;margin-bottom:4px}
+.copy-btn{cursor:pointer;color:var(--primary);font-size:12px;margin-left:8px}
+.copy-btn:hover{color:var(--primary-hover)}
+@media(max-width:640px){.form-row{flex-direction:column}.main{padding:16px}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Secure<span>Vault</span></h1>
+  <div id="authStatus" class="auth-badge">No autenticado</div>
+</header>
+
+<div class="main" id="app">
+  <!-- AUTH -->
+  <div id="authView" class="card" style="max-width:400px;margin:60px auto">
+    <h2>Acceder</h2>
+    <div class="form-row">
+      <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+    </div>
+    <div class="form-row">
+      <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password">
+    </div>
+    <div class="form-row" style="gap:12px">
+      <button class="btn" onclick="login()">Iniciar sesión</button>
+      <button class="btn-outline" onclick="register()">Registrarse</button>
+    </div>
+    <div id="authMessage" style="color:var(--danger);font-size:13px;margin-top:8px"></div>
+  </div>
+
+  <!-- APP -->
+  <div id="appView" class="hidden">
+    <div class="tab-bar">
+      <div class="tab active" data-tab="vaults" onclick="switchTab('vaults')">Vaults</div>
+      <div class="tab" data-tab="secrets" onclick="switchTab('secrets')">Secretos</div>
+      <div class="tab" data-tab="apikeys" onclick="switchTab('apikeys')">API Keys</div>
+    </div>
+
+    <!-- TAB: VAULTS -->
+    <div id="tabVaults" class="tab-content">
+      <div class="card">
+        <h2>Vaults</h2>
+        <div class="form-row">
+          <input type="text" id="vaultName" placeholder="Nombre del vault (ej: produccion)">
+          <input type="text" id="vaultDesc" placeholder="Descripción (opcional)">
+          <button class="btn" onclick="createVault()">Crear</button>
+        </div>
+      </div>
+      <div class="card">
+        <table><thead><tr><th>Nombre</th><th>Descripción</th><th>Secretos</th><th>Creado</th><th></th></tr></thead><tbody id="vaultList"></tbody></table>
+        <div id="vaultsEmpty" class="empty-state hidden"><p>No hay vaults. Crea el primero arriba.</p></div>
+      </div>
+    </div>
+
+    <!-- TAB: SECRETS -->
+    <div id="tabSecrets" class="tab-content hidden">
+      <div class="card">
+        <h2>Añadir secreto</h2>
+        <div class="form-row">
+          <select id="secretVault" style="min-width:160px"></select>
+          <input type="text" id="secretName" placeholder="Nombre (ej: db/password)">
+          <input type="text" id="secretValue" placeholder="Valor (ej: postgres:***)">
+          <button class="btn" onclick="createSecret()">Guardar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="form-row">
+          <select id="filterVault" style="min-width:160px" onchange="loadSecrets()"></select>
+        </div>
+        <table><thead><tr><th>Nombre</th><th>Valor</th><th>Versión</th><th>Actualizado</th><th></th></tr></thead><tbody id="secretList"></tbody></table>
+        <div id="secretsEmpty" class="empty-state hidden"><p>Selecciona un vault y añade secretos.</p></div>
+      </div>
+    </div>
+
+    <!-- TAB: API KEYS -->
+    <div id="tabApikeys" class="tab-content hidden">
+      <div class="card">
+        <h2>API Keys</h2>
+        <div class="form-row">
+          <input type="text" id="apikeyName" placeholder="Nombre (ej: ci-cd)">
+          <button class="btn" onclick="createApiKey()">Generar</button>
+        </div>
+        <div id="newKeyDisplay" class="hidden key-display"></div>
+      </div>
+      <div class="card">
+        <table><thead><tr><th>Nombre</th><th>Prefijo</th><th>Último uso</th><th>Estado</th><th></th></tr></thead><tbody id="apikeyList"></tbody></table>
+        <div id="apikeysEmpty" class="empty-state hidden"><p>No hay API keys.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = 'http://localhost:8080/api/v1';
+let STATE = { token: null, refreshToken: null, userId: null };
+
+// ─── Auth ────────────────────────────────────────────────────────
+async function api(path, opts={}) {
+  const h = {'Content-Type':'application/json', ...opts.headers};
+  if(STATE.token) h['Authorization'] = `Bearer ${STATE.token}`;
+  const r = await fetch(API+path, {...opts, headers:h});
+  if(r.status===401 && STATE.refreshToken) {
+    const ok = await tryRefresh();
+    if(ok) { h['Authorization'] = `Bearer ${STATE.token}`; return fetch(API+path, {...opts, headers:h}); }
+    else { logout(); throw new Error('Sesión expirada'); }
+  }
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||`Error ${r.status}`); }
+  return r.json();
+}
+async function tryRefresh() {
+  try {
+    const r = await fetch(API+'/auth/refresh', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({refresh_token:STATE.refreshToken})});
+    if(!r.ok) return false;
+    const d = await r.json();
+    STATE.token = d.access_token;
+    STATE.refreshToken = d.refresh_token;
+    saveSession();
+    return true;
+  } catch { return false; }
+}
+function saveSession() {
+  localStorage.setItem('sv_token', STATE.token);
+  localStorage.setItem('sv_refresh', STATE.refreshToken);
+  localStorage.setItem('sv_user', STATE.userId);
+}
+function loadSession() {
+  STATE.token = localStorage.getItem('sv_token');
+  STATE.refreshToken = localStorage.getItem('sv_refresh');
+  STATE.userId = localStorage.getItem('sv_user');
+}
+function updateAuthBadge() {
+  const el = document.getElementById('authStatus');
+  if(STATE.token) { el.textContent = '✓ Autenticado'; el.className = 'auth-badge logged'; }
+  else { el.textContent = 'No autenticado'; el.className = 'auth-badge'; }
+}
+
+async function login() {
+  const email = document.getElementById('loginEmail').value;
+  const pwd = document.getElementById('loginPassword').value;
+  if(!email||!pwd) return showMsg('Email y contraseña requeridos','error');
+  try {
+    const d = await api('/auth/login', {method:'POST', body:JSON.stringify({email,password:pwd})});
+    STATE.token=d.access_token; STATE.refreshToken=d.refresh_token; STATE.userId=d.user_id;
+    saveSession(); updateAuthBadge(); showApp();
+    toast('Sesión iniciada','success'); loadVaults();
+  } catch(e) { showMsg(e.message,'error'); }
+}
+async function register() {
+  const email = document.getElementById('loginEmail').value;
+  const pwd = document.getElementById('loginPassword').value;
+  if(!email||!pwd) return showMsg('Email y contraseña requeridos','error');
+  try {
+    await api('/auth/register', {method:'POST', body:JSON.stringify({email,password:pwd})});
+    toast('Registrado correctamente. Inicia sesión.','success');
+    document.getElementById('loginPassword').value='';
+  } catch(e) { showMsg(e.message,'error'); }
+}
+function logout() {
+  STATE.token=null; STATE.refreshToken=null; STATE.userId=null;
+  localStorage.removeItem('sv_token'); localStorage.removeItem('sv_refresh'); localStorage.removeItem('sv_user');
+  updateAuthBadge(); showAuth();
+}
+function showMsg(m,t){ document.getElementById('authMessage').textContent=m; }
+function showAuth() {
+  document.getElementById('authView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function showApp() {
+  document.getElementById('authView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function toast(m,t) {
+  const el=document.getElementById('toast'); el.textContent=m; el.className=`toast ${t} show`;
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ─── Tabs ────────────────────────────────────────────────────────
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.tab===t));
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.toggle('hidden',el.id!=='tab'+t.charAt(0).toUpperCase()+t.slice(1)));
+  if(t==='vaults'&&STATE.token) loadVaults();
+  if(t==='secrets'&&STATE.token) loadSecrets();
+  if(t==='apikeys'&&STATE.token) loadApiKeys();
+}
+
+// ─── Vaults ──────────────────────────────────────────────────────
+async function loadVaults() {
+  try {
+    const d = await api('/vaults');
+    const list = document.getElementById('vaultList');
+    const empty = document.getElementById('vaultsEmpty');
+    list.innerHTML = '';
+    if(!d.vaults||d.vaults.length===0) { empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    d.vaults.forEach(v => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><strong>${esc(v.name)}</strong></td><td>${esc(v.description||'-')}</td><td>0</td><td>${new Date(v.created_at).toLocaleDateString()}</td>
+        <td class="actions"><button class="btn-danger btn-sm" onclick="deleteVault('${v.id}')">Eliminar</button></td>`;
+      list.appendChild(tr);
+    });
+    // Populate selects
+    [document.getElementById('secretVault'),document.getElementById('filterVault')].forEach(sel=>{
+      sel.innerHTML = d.vaults.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join('');
+    });
+    loadSecretCounts(d.vaults);
+  } catch(e) { toast(e.message,'error'); }
+}
+async function loadSecretCounts(vaults) {
+  const rows = document.querySelectorAll('#vaultList tr');
+  for(let i=0; i<vaults.length; i++){
+    try{ const d = await api(`/vaults/${vaults[i].id}/secrets`);
+      const count = d.secrets?d.secrets.length:0;
+      if(rows[i]) rows[i].cells[2].textContent = count;
+    }catch{}
+  }
+}
+async function createVault() {
+  const name = document.getElementById('vaultName').value;
+  const desc = document.getElementById('vaultDesc').value;
+  if(!name) return toast('Nombre requerido','error');
+  try {
+    await api('/vaults', {method:'POST', body:JSON.stringify({name,description:desc||undefined})});
+    toast('Vault creado','success');
+    document.getElementById('vaultName').value=''; document.getElementById('vaultDesc').value='';
+    loadVaults();
+  } catch(e) { toast(e.message,'error'); }
+}
+async function deleteVault(id) {
+  if(!confirm('¿Eliminar vault y todos sus secretos?')) return;
+  try { await api(`/vaults/${id}`, {method:'DELETE'}); toast('Vault eliminado','success'); loadVaults(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+// ─── Secrets ─────────────────────────────────────────────────────
+async function loadSecrets() {
+  const vid = document.getElementById('filterVault').value;
+  if(!vid) { document.getElementById('secretList').innerHTML=''; document.getElementById('secretsEmpty').classList.remove('hidden'); return; }
+  try {
+    const d = await api(`/vaults/${vid}/secrets`);
+    const list = document.getElementById('secretList');
+    const empty = document.getElementById('secretsEmpty');
+    list.innerHTML = '';
+    if(!d.secrets||d.secrets.length===0) { empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    d.secrets.forEach(s => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(s.name)}</td><td><span class="secret-value" id="sv-${s.id}">••••••••</span></td>
+        <td>v${s.version||1}</td><td>${new Date(s.updated_at).toLocaleDateString()}</td>
+        <td class="actions">
+          <button class="btn-outline btn-sm" onclick="revealSecret('${vid}','${s.id}')">Ver</button>
+          <button class="btn-danger btn-sm" onclick="deleteSecret('${vid}','${s.id}')">Borrar</button>
+        </td>`;
+      list.appendChild(tr);
+    });
+  } catch(e) { toast(e.message,'error'); }
+}
+async function revealSecret(vid,sid) {
+  const el = document.getElementById(`sv-${sid}`);
+  if(el.dataset.revealed==='1') { el.textContent='••••••••'; el.dataset.revealed='0'; return; }
+  try {
+    const d = await api(`/vaults/${vid}/secrets/${sid}`);
+    el.textContent = d.value||'(vacío)';
+    el.dataset.revealed='1';
+  } catch(e) { toast(e.message,'error'); }
+}
+async function createSecret() {
+  const vid = document.getElementById('secretVault').value;
+  const name = document.getElementById('secretName').value;
+  const value = document.getElementById('secretValue').value;
+  if(!vid||!name||!value) return toast('Vault, nombre y valor requeridos','error');
+  try {
+    await api(`/vaults/${vid}/secrets`, {method:'POST', body:JSON.stringify({name,value})});
+    toast('Secreto guardado','success');
+    document.getElementById('secretName').value=''; document.getElementById('secretValue').value='';
+    loadSecrets(); loadVaults();
+  } catch(e) { toast(e.message,'error'); }
+}
+async function deleteSecret(vid,sid) {
+  if(!confirm('¿Eliminar este secreto?')) return;
+  try { await api(`/vaults/${vid}/secrets/${sid}`, {method:'DELETE'}); toast('Secreto eliminado','success'); loadSecrets(); loadVaults(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+// ─── API Keys ────────────────────────────────────────────────────
+async function loadApiKeys() {
+  try {
+    const d = await api('/api-keys');
+    const list = document.getElementById('apikeyList');
+    const empty = document.getElementById('apikeysEmpty');
+    list.innerHTML = '';
+    if(!d.keys||d.keys.length===0) { empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    d.keys.forEach(k => {
+      const tr = document.createElement('tr');
+      const status = k.revoked ? 'Revocada' : 'Activa';
+      const color = k.revoked ? 'var(--text-muted)' : 'var(--success)';
+      tr.innerHTML = `<td>${esc(k.name)}</td><td><code>${esc(k.key_prefix||'')}...</code></td>
+        <td>${k.last_used_at?new Date(k.last_used_at).toLocaleDateString():'Nunca'}</td>
+        <td style="color:${color}">${status}</td>
+        <td class="actions">${k.revoked?'':`<button class="btn-danger btn-sm" onclick="revokeKey('${k.id}')">Revocar</button>`}</td>`;
+      list.appendChild(tr);
+    });
+  } catch(e) { toast(e.message,'error'); }
+}
+async function createApiKey() {
+  const name = document.getElementById('apikeyName').value;
+  if(!name) return toast('Nombre requerido','error');
+  try {
+    const d = await api('/api-keys', {method:'POST', body:JSON.stringify({name})});
+    const el = document.getElementById('newKeyDisplay');
+    el.innerHTML = `<div class="label">🔑 Clave generada — cópiala ahora</div>
+      <code>${esc(d.key)}</code>
+      <span class="copy-btn" onclick="navigator.clipboard.writeText('${d.key}');toast('Copiada','success')">📋 Copiar</span>`;
+    el.classList.remove('hidden');
+    document.getElementById('apikeyName').value='';
+    loadApiKeys();
+  } catch(e) { toast(e.message,'error'); }
+}
+async function revokeKey(id) {
+  if(!confirm('¿Revocar esta API key?')) return;
+  try { await api(`/api-keys/${id}/revoke`, {method:'PUT'}); toast('API key revocada','success'); loadApiKeys(); }
+  catch(e) { toast(e.message,'error'); }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ─── Init ────────────────────────────────────────────────────────
+loadSession();
+updateAuthBadge();
+if(STATE.token) { showApp(); loadVaults(); }
+else { showAuth(); }
+</script>
+</body>
+</html>
