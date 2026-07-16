@@ -3,25 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SecureVault</title>
+<title>SecureVault — Tus secretos, seguros</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;--text-muted:#8b949e;--primary:#58a6ff;--primary-hover:#79b8ff;--danger:#f85149;--success:#3fb950;--warning:#d29922;--radius:6px}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
-header h1{font-size:20px;font-weight:600;color:var(--primary)}
-header h1 span{color:var(--text);font-weight:300}
-.auth-badge{font-size:12px;padding:4px 12px;border-radius:20px;background:var(--border);color:var(--text-muted)}
-.auth-badge.logged{background:#1a3a2a;color:var(--success)}
-.main{max-width:960px;margin:0 auto;padding:24px}
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#1c2333;--border:#30363d;--text:#c9d1d9;--text-muted:#8b949e;--primary:#58a6ff;--primary-hover:#79b8ff;--primary-dim:rgba(88,166,255,.1);--danger:#f85149;--success:#3fb950;--warning:#d29922;--radius:8px;--radius-sm:6px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;--mono:'SF Mono','Cascadia Code','Fira Code',monospace}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{color:var(--primary);text-decoration:none}
+a:hover{color:var(--primary-hover)}
+/* ── Views ────────────────────────────────────── */
+.view{display:none;animation:fadeIn .3s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(88,166,255,.1)}50%{box-shadow:0 0 40px rgba(88,166,255,.2)}}
+@keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+/* ── Landing ──────────────────────────────────── */
+.landing-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(13,17,23,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.landing-nav .logo{font-size:22px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px}
+.landing-nav .logo span{color:var(--text);font-weight:300}
+.landing-nav .logo svg{width:28px;height:28px}
+.landing-nav .nav-links{display:flex;align-items:center;gap:24px}
+.landing-nav .nav-links a{color:var(--text-muted);font-size:14px;transition:color .2s}
+.landing-nav .nav-links a:hover{color:var(--text)}
+.nav-cta{padding:8px 20px;border-radius:20px;background:var(--primary);color:#0d1117!important;font-weight:600;font-size:14px;transition:all .2s;border:none;cursor:pointer}
+.nav-cta:hover{background:var(--primary-hover);transform:translateY(-1px)}
+/* Hero */
+.hero{min-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 24px 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 50% 30%,rgba(88,166,255,.08) 0%,transparent 70%),radial-gradient(ellipse 400px 300px at 20% 60%,rgba(63,185,80,.04) 0%,transparent 70%),radial-gradient(ellipse 400px 300px at 80% 50%,rgba(88,166,255,.04) 0%,transparent 70%);pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.15;mask-image:radial-gradient(ellipse 50% 60% at 50% 40%,black 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse 50% 60% at 50% 40%,black 20%,transparent 70%);pointer-events:none}
+.hero-content{position:relative;z-index:1;text-align:center;max-width:720px}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:20px;background:var(--primary-dim);border:1px solid rgba(88,166,255,.2);font-size:13px;color:var(--primary);margin-bottom:24px}
+.hero h1{font-size:clamp(36px,6vw,60px);font-weight:800;line-height:1.1;margin-bottom:20px;background:linear-gradient(135deg,var(--text) 0%,var(--primary) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(16px,2vw,20px);color:var(--text-muted);line-height:1.6;margin-bottom:36px;max-width:580px;margin-left:auto;margin-right:auto}
+.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.hero-actions .btn-primary{padding:14px 36px;border-radius:var(--radius);background:linear-gradient(135deg,var(--primary),#4a90d9);color:#0d1117;font-weight:700;font-size:16px;border:none;cursor:pointer;transition:all .3s;box-shadow:0 4px 20px rgba(88,166,255,.2)}
+.hero-actions .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(88,166,255,.3)}
+.hero-actions .btn-secondary{padding:14px 36px;border-radius:var(--radius);background:transparent;color:var(--text);font-weight:600;font-size:16px;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.hero-actions .btn-secondary:hover{background:var(--surface);border-color:var(--text-muted)}
+.hero-stats{display:flex;gap:48px;margin-top:60px;justify-content:center;flex-wrap:wrap}
+.hero-stats .stat{text-align:center}
+.hero-stats .stat-num{font-size:28px;font-weight:700;color:var(--text)}
+.hero-stats .stat-label{font-size:13px;color:var(--text-muted);margin-top:4px}
+/* Sections */
+.section{padding:80px 24px;max-width:1100px;margin:0 auto}
+.section-label{display:inline-block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--primary);margin-bottom:8px}
+.section h2{font-size:clamp(28px,4vw,40px);font-weight:700;margin-bottom:16px;line-height:1.2}
+.section>.section-desc{font-size:16px;color:var(--text-muted);max-width:560px;margin-bottom:48px;line-height:1.6}
+/* Features */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;transition:all .3s;position:relative;overflow:hidden}
+.feature-card:hover{transform:translateY(-2px);border-color:var(--primary);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.feature-card .icon{width:48px;height:48px;border-radius:12px;background:var(--primary-dim);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+.feature-card h3{font-size:17px;font-weight:600;margin-bottom:8px}
+.feature-card p{font-size:14px;color:var(--text-muted);line-height:1.6}
+/* How it works */
+.steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;counter-reset:step}
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;position:relative}
+.step-card::before{counter-increment:step;content:counter(step);position:absolute;top:16px;right:20px;font-size:40px;font-weight:800;color:var(--primary-dim);line-height:1}
+.step-card .icon{font-size:28px;margin-bottom:12px;display:block}
+.step-card h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.step-card p{font-size:14px;color:var(--text-muted);line-height:1.6}
+/* Security */
+.security-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.security-badge{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;transition:border-color .2s}
+.security-badge:hover{border-color:var(--primary)}
+.security-badge .badge-icon{font-size:32px;margin-bottom:8px;display:block}
+.security-badge h4{font-size:13px;font-weight:600;margin-bottom:4px}
+.security-badge p{font-size:12px;color:var(--text-muted)}
+/* CTA */
+.cta-section{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:var(--radius);padding:60px 40px;text-align:center;max-width:800px;margin:80px auto}
+.cta-section h2{font-size:clamp(24px,3vw,34px);margin-bottom:12px}
+.cta-section p{color:var(--text-muted);margin-bottom:28px;font-size:16px}
+.cta-section .btn-primary{padding:14px 40px;border-radius:var(--radius);background:linear-gradient(135deg,var(--primary),#4a90d9);color:#0d1117;font-weight:700;font-size:16px;border:none;cursor:pointer;transition:all .3s;box-shadow:0 4px 20px rgba(88,166,255,.2)}
+.cta-section .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(88,166,255,.3)}
+/* Footer */
+.landing-footer{border-top:1px solid var(--border);padding:40px 24px 24px;max-width:1100px;margin:0 auto}
+.landing-footer .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px;margin-bottom:32px}
+.landing-footer .footer-brand .logo{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:8px;display:block}
+.landing-footer .footer-brand .logo span{color:var(--text);font-weight:300}
+.landing-footer .footer-brand p{font-size:13px;color:var(--text-muted);line-height:1.5;max-width:280px}
+.landing-footer .footer-col h5{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:12px}
+.landing-footer .footer-col a{display:block;font-size:13px;color:var(--text-muted);padding:4px 0;transition:color .2s}
+.landing-footer .footer-col a:hover{color:var(--text)}
+.landing-footer .footer-bottom{border-top:1px solid var(--border);padding-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.landing-footer .footer-bottom p{font-size:12px;color:var(--text-muted)}
+/* ── Auth View ────────────────────────────────── */
+.auth-wrapper{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:40px;width:100%;max-width:400px;animation:slideUp .4s ease}
+.auth-card .auth-header{text-align:center;margin-bottom:28px}
+.auth-card .auth-header .logo{font-size:24px;font-weight:700;color:var(--primary)}
+.auth-card .auth-header .logo span{color:var(--text);font-weight:300}
+.auth-card .auth-header p{font-size:14px;color:var(--text-muted);margin-top:6px}
+.auth-card .form-group{margin-bottom:16px}
+.auth-card label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px}
+.auth-card input{width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+.auth-card input:focus{border-color:var(--primary)}
+.auth-card .auth-actions{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.auth-card .btn-login{padding:12px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--primary),#4a90d9);color:#0d1117;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:all .2s}
+.auth-card .btn-login:hover{opacity:.9}
+.auth-card .btn-register{padding:12px;border-radius:var(--radius-sm);background:transparent;color:var(--text);font-size:15px;font-weight:500;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.auth-card .btn-register:hover{background:var(--bg)}
+.auth-card .auth-back{text-align:center;margin-top:20px}
+.auth-card .auth-back a{font-size:13px;color:var(--text-muted);cursor:pointer}
+.auth-card .auth-back a:hover{color:var(--primary)}
+.auth-error{color:var(--danger);font-size:13px;text-align:center;min-height:20px}
+/* ── App / Dashboard ──────────────────────────── */
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.app-header .logo{font-size:20px;font-weight:600;color:var(--primary);display:flex;align-items:center;gap:8px}
+.app-header .logo span{color:var(--text);font-weight:300}
+.app-header .app-actions{display:flex;align-items:center;gap:16px}
+.app-header .user-badge{font-size:12px;padding:4px 14px;border-radius:20px;background:#1a3a2a;color:var(--success)}
+.app-header .btn-logout{padding:8px 16px;border-radius:20px;background:transparent;color:var(--text-muted);font-size:13px;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+.app-header .btn-logout:hover{color:var(--danger);border-color:var(--danger)}
+.app-main{max-width:960px;margin:0 auto;padding:24px}
+.tab-bar{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.tab{padding:10px 20px;cursor:pointer;font-size:14px;color:var(--text-muted);border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
 .card h2{font-size:16px;margin-bottom:12px;color:var(--text)}
 .form-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-input,select,button{font-family:inherit;font-size:14px;border-radius:var(--radius);padding:8px 12px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;transition:border-color .2s}
+input,select,button{font-family:inherit;font-size:14px;border-radius:var(--radius-sm);padding:8px 12px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;transition:border-color .2s}
 input:focus,select:focus{border-color:var(--primary)}
 button{cursor:pointer;font-weight:500}
-.btn{background:var(--primary);color:#0d1117;border-color:var(--primary)}
-.btn:hover{background:var(--primary-hover)}
+.btn-action{background:var(--primary);color:#0d1117;border-color:var(--primary);font-weight:600}
+.btn-action:hover{background:var(--primary-hover)}
 .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
 .btn-danger:hover{opacity:.85}
 .btn-outline{background:transparent;border-color:var(--border);color:var(--text)}
@@ -32,25 +140,20 @@ th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);fo
 th{color:var(--text-muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
 tr:hover td{background:rgba(88,166,255,.04)}
 .actions{display:flex;gap:6px}
-.actions button{font-size:12px}
-.secret-value{font-family:'SF Mono','Cascadia Code',monospace;background:var(--bg);padding:4px 8px;border-radius:4px;font-size:13px;word-break:break-all}
-.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--radius);color:#fff;font-size:14px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
-.toast.show{opacity:1}
-.toast.success{background:#1a3a2a;border:1px solid var(--success)}
-.toast.error{background:#3a1a1a;border:1px solid var(--danger)}
-.hidden{display:none!important}
+.secret-value{font-family:var(--mono);background:var(--bg);padding:4px 8px;border-radius:4px;font-size:13px;word-break:break-all}
 .empty-state{padding:40px 20px;text-align:center;color:var(--text-muted)}
 .empty-state p{margin-top:8px;font-size:14px}
-.loading{text-align:center;padding:20px;color:var(--text-muted)}
-.metadata{font-size:12px;color:var(--text-muted);margin-top:4px}
-.tab-bar{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)}
-.tab{padding:10px 20px;cursor:pointer;font-size:14px;color:var(--text-muted);border-bottom:2px solid transparent;transition:all .2s}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-.key-display{background:var(--bg);padding:12px;border-radius:var(--radius);border:1px solid var(--success);font-family:monospace;font-size:13px;word-break:break-all;margin:8px 0}
+.key-display{background:var(--bg);padding:12px;border-radius:var(--radius);border:1px solid var(--success);font-family:var(--mono);font-size:13px;word-break:break-all;margin:8px 0}
 .key-display .label{color:var(--text-muted);font-size:11px;text-transform:uppercase;margin-bottom:4px}
 .copy-btn{cursor:pointer;color:var(--primary);font-size:12px;margin-left:8px}
 .copy-btn:hover{color:var(--primary-hover)}
+.metadata{font-size:12px;color:var(--text-muted);margin-top:4px}
+.hidden{display:none!important}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--radius);color:#fff;font-size:14px;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.success{background:#1a3a2a;border:1px solid var(--success)}
+.toast.error{background:#3a1a1a;border:1px solid var(--danger)}
+/* Manual */
 .manual-card{max-width:720px;margin:0 auto}
 .manual-section{border-top:1px solid var(--border);padding:16px 0}
 .manual-section h3{font-size:15px;margin-bottom:8px;color:var(--primary)}
@@ -58,44 +161,249 @@ tr:hover td{background:rgba(88,166,255,.04)}
 .manual-section ul,.manual-section ol{margin:4px 0 12px 20px;font-size:13px;line-height:1.6}
 .manual-section li{margin-bottom:4px}
 .manual-section code{background:var(--bg);padding:2px 6px;border-radius:3px;font-size:12px;color:var(--primary)}
-.manual-section pre{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;overflow-x:auto;font-family:'SF Mono','Cascadia Code',monospace;font-size:12px;line-height:1.5;margin:8px 0;color:var(--text)}
+.manual-section pre{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.5;margin:8px 0;color:var(--text)}
 .manual-section pre code{background:none;padding:0;color:var(--text)}
 .manual-subsection{margin:12px 0}
 .manual-subsection h4{font-size:13px;margin-bottom:4px;color:var(--text)}
-.manual-note{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);border-radius:var(--radius);padding:10px 14px;margin:8px 0;font-size:13px;line-height:1.5}
+.manual-note{background:var(--primary-dim);border:1px solid rgba(88,166,255,.2);border-radius:var(--radius);padding:10px 14px;margin:8px 0;font-size:13px;line-height:1.5}
 .manual-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
 .manual-table th,.manual-table td{padding:6px 10px;border:1px solid var(--border);text-align:left}
 .manual-table th{background:var(--bg);font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:500}
 .manual-footer{margin-top:8px;border-top:1px solid var(--border);padding:12px 0}
-@media(max-width:640px){.form-row{flex-direction:column}.main{padding:16px}}
+/* Responsive */
+@media(max-width:768px){
+  .landing-nav .nav-links{display:none}
+  .hero-stats{gap:24px}
+  .features-grid,.steps,.security-grid{grid-template-columns:1fr}
+  .landing-footer .footer-grid{grid-template-columns:1fr}
+  .cta-section{padding:40px 24px}
+  .app-header{padding:10px 16px}
+  .app-main{padding:16px}
+  .form-row{flex-direction:column}
+}
+@media(max-width:640px){
+  .hero h1{font-size:32px}
+  .section{padding:60px 16px}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Secure<span>Vault</span></h1>
-  <div id="authStatus" class="auth-badge">No autenticado</div>
-</header>
+<!-- ═══════════════ LANDING PAGE ═══════════════ -->
+<div id="landingView" class="view active">
 
-<div class="main" id="app">
-  <!-- AUTH -->
-  <div id="authView" class="card" style="max-width:400px;margin:60px auto">
-    <h2>Acceder</h2>
-    <div class="form-row">
-      <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+  <nav class="landing-nav">
+    <div class="logo">
+      <svg viewBox="0 0 28 28" fill="none"><rect x="4" y="10" width="20" height="14" rx="3" stroke="currentColor" stroke-width="2"/><path d="M10 10V7a4 4 0 118 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="17" r="2" fill="currentColor"/></svg>
+      Secure<span>Vault</span>
     </div>
-    <div class="form-row">
-      <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password">
+    <div class="nav-links">
+      <a href="#features">Características</a>
+      <a href="#how">Cómo funciona</a>
+      <a href="#security">Seguridad</a>
+      <button class="nav-cta" onclick="showAuth()">Iniciar sesión</button>
     </div>
-    <div class="form-row" style="gap:12px">
-      <button class="btn" onclick="login()">Iniciar sesión</button>
-      <button class="btn-outline" onclick="register()">Registrarse</button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🔒 Cifrado AES-256-GCM · Código abierto</div>
+      <h1>Tus secretos,<br>verdaderamente seguros</h1>
+      <p>Gestiona API keys, contraseñas y tokens con cifrado de grado militar. Almacena, recupera y automatiza sin exponer nada.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="showAuth()">🚀 Comenzar gratis</button>
+        <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Saber más</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num">AES-256</div><div class="stat-label">Cifrado en reposo</div></div>
+        <div class="stat"><div class="stat-num">Argon2id</div><div class="stat-label">Hash de contraseñas</div></div>
+        <div class="stat"><div class="stat-num">JWT</div><div class="stat-label">Autenticación segura</div></div>
+      </div>
     </div>
-    <div id="authMessage" style="color:var(--danger);font-size:13px;margin-top:8px"></div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <div class="section-label">Características</div>
+    <h2>Todo lo que necesitas para<br>gestionar secretos</h2>
+    <p class="section-desc">Una plataforma completa con las mejores prácticas de seguridad para proteger tu información sensible.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon">🔐</div>
+        <h3>Cifrado AES-256-GCM</h3>
+        <p>Cada secreto se cifra con una clave única y nonce aleatorio. Los datos en PostgreSQL son ilegibles sin la clave de cifrado.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🌐</div>
+        <h3>Interfaz Web</h3>
+        <p>Gestiona tus secretos desde cualquier navegador. Interfaz limpia, oscura y responsiva con todas las funciones a un clic.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💻</div>
+        <h3>CLI Potente</h3>
+        <p>Automatiza con comandos desde la terminal. Ideal para scripts, CI/CD y pipelines de despliegue.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📡</div>
+        <h3>API REST</h3>
+        <p>Integración programática desde cualquier lenguaje. Endpoints completos con autenticación JWT y API Keys.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔑</div>
+        <h3>API Keys Revocables</h3>
+        <p>Tokens de acceso para automatización que puedes revocar individualmente sin afectar a otros.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🛡️</div>
+        <h3>Argon2id</h3>
+        <p>Las contraseñas se almacenan con Argon2id, el estándar OWASP para hash resistente a ataques GPU/ASIC.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="section">
+    <div class="section-label">Cómo funciona</div>
+    <h2>De cero a secreto guardado<br>en segundos</h2>
+    <p class="section-desc">Tres pasos simples para proteger tu información sensible.</p>
+    <div class="steps">
+      <div class="step-card">
+        <span class="icon">📝</span>
+        <h3>Crea tu cuenta</h3>
+        <p>Regístrate con email y contraseña. Tu cuenta queda protegida con Argon2id desde el primer momento.</p>
+      </div>
+      <div class="step-card">
+        <span class="icon">📁</span>
+        <h3>Organiza en vaults</h3>
+        <p>Crea vaults para agrupar secretos por proyecto o ámbito: producción, staging, desarrollo, etc.</p>
+      </div>
+      <div class="step-card">
+        <span class="icon">🔒</span>
+        <h3>Guarda y olvida</h3>
+        <p>Almacena tu API key o contraseña. SecureVault la cifra automáticamente. Cuando la necesites, la recuperas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security -->
+  <section id="security" class="section">
+    <div class="section-label">Seguridad</div>
+    <h2>Diseñado para proteger<br>lo que importa</h2>
+    <p class="section-desc">Capa tras capa de seguridad para que tus secretos estén siempre a salvo.</p>
+    <div class="security-grid">
+      <div class="security-badge">
+        <span class="badge-icon">🔒</span>
+        <h4>AES-256-GCM</h4>
+        <p>Cifrado autenticado con nonce único por secreto</p>
+      </div>
+      <div class="security-badge">
+        <span class="badge-icon">🧂</span>
+        <h4>Argon2id</h4>
+        <p>Hash de contraseñas resistente a GPU/ASIC</p>
+      </div>
+      <div class="security-badge">
+        <span class="badge-icon">🎫</span>
+        <h4>JWT + Refresh</h4>
+        <p>Tokens con expiración y renovación automática</p>
+      </div>
+      <div class="security-badge">
+        <span class="badge-icon">🔑</span>
+        <h4>API Keys revocables</h4>
+        <p>Control individual de acceso programático</p>
+      </div>
+      <div class="security-badge">
+        <span class="badge-icon">📦</span>
+        <h4>PostgreSQL</h4>
+        <p>Datos cifrados en reposo en base de datos relacional</p>
+      </div>
+      <div class="security-badge">
+        <span class="badge-icon">🔐</span>
+        <h4>TLS listo</h4>
+        <p>Preparado para HTTPS con proxy inverso</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>Protege tus secretos ahora</h2>
+    <p>Sin registro de tarjeta. Tu propio servidor. Código abierto en GitHub.</p>
+    <button class="btn-primary" onclick="showAuth()">🚀 Comenzar gratis</button>
   </div>
 
-  <!-- APP -->
-  <div id="appView" class="hidden">
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="logo">Secure<span>Vault</span></span>
+        <p>Gestor de secretos cifrados con AES-256-GCM. Código abierto y autohosteado.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Producto</h5>
+        <a href="#features">Características</a>
+        <a href="#security">Seguridad</a>
+        <a href="#how">Cómo funciona</a>
+      </div>
+      <div class="footer-col">
+        <h5>Más</h5>
+        <a href="https://github.com/ogarridojimenez/securevault" target="_blank" rel="noopener">GitHub</a>
+        <a href="#" onclick="showAuth()">Acceder</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 SecureVault.</p>
+      <p>Hecho con ❤️ para mantener tus secretos a salvo.</p>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ═══════════════ AUTH VIEW ═══════════════ -->
+<div id="authView" class="view">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo">Secure<span>Vault</span></div>
+        <p>Accede a tu gestor de secretos</p>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="authMessage" class="auth-error"></div>
+      <div class="auth-actions">
+        <button class="btn-login" onclick="login()">Iniciar sesión</button>
+        <button class="btn-register" onclick="register()">Crear cuenta</button>
+      </div>
+      <div class="auth-back">
+        <a onclick="showLanding()">← Volver a SecureVault</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP / DASHBOARD ═══════════════ -->
+<div id="appView" class="view">
+
+  <header class="app-header">
+    <div class="logo">
+      <svg viewBox="0 0 28 28" fill="none" width="24" height="24"><rect x="4" y="10" width="20" height="14" rx="3" stroke="currentColor" stroke-width="2"/><path d="M10 10V7a4 4 0 118 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="17" r="2" fill="currentColor"/></svg>
+      Secure<span>Vault</span>
+    </div>
+    <div class="app-actions">
+      <span id="userEmail" class="user-badge"></span>
+      <button class="btn-logout" onclick="logout()">Cerrar sesión →</button>
+    </div>
+  </header>
+
+  <div class="app-main">
     <div class="tab-bar">
       <div class="tab active" data-tab="vaults" onclick="switchTab('vaults')">Vaults</div>
       <div class="tab" data-tab="secrets" onclick="switchTab('secrets')">Secretos</div>
@@ -110,7 +418,7 @@ tr:hover td{background:rgba(88,166,255,.04)}
         <div class="form-row">
           <input type="text" id="vaultName" placeholder="Nombre del vault (ej: produccion)">
           <input type="text" id="vaultDesc" placeholder="Descripción (opcional)">
-          <button class="btn" onclick="createVault()">Crear</button>
+          <button class="btn-action" onclick="createVault()">Crear</button>
         </div>
       </div>
       <div class="card">
@@ -126,8 +434,8 @@ tr:hover td{background:rgba(88,166,255,.04)}
         <div class="form-row">
           <select id="secretVault" style="min-width:160px"></select>
           <input type="text" id="secretName" placeholder="Nombre (ej: db/password)">
-          <input type="text" id="secretValue" placeholder="Valor (ej: postgres:***)">
-          <button class="btn" onclick="createSecret()">Guardar</button>
+          <input type="text" id="secretValue" placeholder="Valor">
+          <button class="btn-action" onclick="createSecret()">Guardar</button>
         </div>
       </div>
       <div class="card">
@@ -145,7 +453,7 @@ tr:hover td{background:rgba(88,166,255,.04)}
         <h2>API Keys</h2>
         <div class="form-row">
           <input type="text" id="apikeyName" placeholder="Nombre (ej: ci-cd)">
-          <button class="btn" onclick="createApiKey()">Generar</button>
+          <button class="btn-action" onclick="createApiKey()">Generar</button>
         </div>
         <div id="newKeyDisplay" class="hidden key-display"></div>
       </div>
@@ -158,9 +466,7 @@ tr:hover td{background:rgba(88,166,255,.04)}
     <!-- TAB: MANUAL -->
     <div id="tabManual" class="tab-content hidden">
       <div class="card manual-card">
-
         <h2 style="margin-top:0">📘 Manual de usuario — SecureVault</h2>
-
         <div class="manual-section">
           <h3>🔷 ¿Qué es SecureVault?</h3>
           <p><strong>SecureVault</strong> es un gestor de secretos cifrados. Permite almacenar, recuperar y gestionar de forma segura cualquier información sensible: API keys, contraseñas de bases de datos, tokens de servicios, certificados, etc.</p>
@@ -172,7 +478,6 @@ tr:hover td{background:rgba(88,166,255,.04)}
             <li><strong>API REST</strong> — integración programática desde otras aplicaciones</li>
           </ul>
         </div>
-
         <div class="manual-section">
           <h3>🚀 Comenzar</h3>
           <p>El servidor debe estar corriendo. Una vez iniciado, abre tu navegador en:</p>
@@ -183,15 +488,11 @@ tr:hover td{background:rgba(88,166,255,.04)}
             <li>PostgreSQL 18+ con base <code>securevault</code></li>
             <li>Clave de cifrado en <code>config.yaml</code></li>
           </ul>
-          <div class="manual-note">
-            <strong>📌 Nota:</strong> La primera vez debes registrarte (email + contraseña). Luego inicia sesión con esas credenciales.
-          </div>
+          <div class="manual-note"><strong>📌 Nota:</strong> La primera vez debes registrarte (email + contraseña). Luego inicia sesión con esas credenciales.</div>
         </div>
-
         <div class="manual-section">
           <h3>🌐 Web UI</h3>
-          <p>Tras iniciar sesión verás tres pestañas:</p>
-
+          <p>Tras iniciar sesión verás varias pestañas:</p>
           <div class="manual-subsection">
             <h4>📁 Vaults</h4>
             <p>Los <strong>vaults</strong> son carpetas que agrupan secretos por ámbito (ej: <code>produccion</code>, <code>staging</code>, <code>desarrollo</code>).</p>
@@ -203,7 +504,6 @@ tr:hover td{background:rgba(88,166,255,.04)}
               <li>Pulsa <strong>Eliminar</strong> para borrar el vault y todos sus secretos</li>
             </ol>
           </div>
-
           <div class="manual-subsection">
             <h4>🔐 Secretos</h4>
             <p>Los <strong>secretos</strong> son pares nombre/valor que se almacenan cifrados.</p>
@@ -216,14 +516,9 @@ tr:hover td{background:rgba(88,166,255,.04)}
             </ol>
             <p><strong>Ver secreto:</strong> Pulsa <strong>Ver</strong> para mostrar/ocultar el valor descifrado.</p>
             <p><strong>Borrar secreto:</strong> Pulsa <strong>Borrar</strong> para eliminarlo permanentemente.</p>
-            <div class="manual-note">
-              <strong>⚠️</strong> Los valores se muestran como <code>••••••••</code> por defecto. Solo se descifran al pulsar "Ver".
-            </div>
           </div>
-
           <div class="manual-subsection">
             <h4>🔑 API Keys</h4>
-            <p>Las <strong>API Keys</strong> son tokens de acceso programático. Sirven para que scripts y aplicaciones se autentiquen sin usar contraseña.</p>
             <ol>
               <li>Escribe un nombre descriptivo (ej: <code>ci-cd</code>, <code>monitoring</code>)</li>
               <li>Pulsa <strong>Generar</strong></li>
@@ -232,17 +527,13 @@ tr:hover td{background:rgba(88,166,255,.04)}
             </ol>
           </div>
         </div>
-
         <div class="manual-section">
           <h3>💻 CLI</h3>
-          <p>El binario <code>securevault-cli</code> permite gestionar secretos desde la terminal. Ideal para scripts CI/CD y automatización.</p>
-
+          <p>El binario <code>securevault-cli</code> permite gestionar secretos desde la terminal.</p>
           <div class="manual-subsection">
             <h4>Login</h4>
             <pre>securevault-cli login -e usuario@email.com -p contraseña -s http://localhost:8080</pre>
-            <p>Guarda un token de acceso en <code>~/.vault_token</code> para comandos posteriores.</p>
           </div>
-
           <div class="manual-subsection">
             <h4>Comandos principales</h4>
             <table class="manual-table">
@@ -256,7 +547,6 @@ tr:hover td{background:rgba(88,166,255,.04)}
               <tr><td><code>api-key create &lt;name&gt;</code></td><td>Generar una API key programática</td></tr>
             </table>
           </div>
-
           <div class="manual-subsection">
             <h4>Ejemplos CLI</h4>
             <pre># Guardar contraseña de BD
@@ -266,18 +556,13 @@ securevault-cli set produccion/bd/password "postgres:SuperSecret123"
 export API_KEY=$(securevault-cli get opencodezen/api-key)
 open code --api-key "$API_KEY"
 
-# Listar secretos de staging
-securevault-cli list staging
-
 # Exportar todo (para backup)
 securevault-cli export > backup.json</pre>
           </div>
         </div>
-
         <div class="manual-section">
           <h3>📡 API REST</h3>
           <p>Todas las funcionalidades están expuestas como API REST. Usa JWT Bearer para autenticación.</p>
-
           <div class="manual-subsection">
             <h4>Endpoints principales</h4>
             <table class="manual-table">
@@ -297,97 +582,71 @@ securevault-cli export > backup.json</pre>
               <tr><td>PUT</td><td><code>/api/v1/api-keys/{id}/revoke</code></td><td>Revocar API key</td></tr>
             </table>
           </div>
-
-          <div class="manual-subsection">
-            <h4>Ejemplo API (curl)</h4>
-            <pre># 1. Login
-curl -s -X POST http://localhost:8080/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"usuario@email.com","password":"MiPassword"}' | jq .
-
-# 2. Obtener secreto
-TOKEN="eyJhbGciOiJIUzI1NiIs..."
-curl -s http://localhost:8080/api/v1/vaults/{vault_id}/secrets/{secret_id} \
-  -H "Authorization: Bearer $TOKEN" | jq .</pre>
-          </div>
         </div>
-
         <div class="manual-section">
           <h3>🔒 Seguridad</h3>
           <ul>
             <li><strong>Cifrado en reposo:</strong> AES-256-GCM, nonce único por secreto. Los datos en PostgreSQL son bytes cifrados, ilegibles sin la clave.</li>
-            <li><strong>Autenticación:</strong> JWT con refresh tokens. Las contraseñas se almacenan con Argon2id (hash resistente a GPU/ASIC).</li>
+            <li><strong>Autenticación:</strong> JWT con refresh tokens. Las contraseñas se almacenan con Argon2id.</li>
             <li><strong>API Keys:</strong> Tokens de acceso directo para automatización. Se pueden revocar individualmente.</li>
             <li><strong>Clave de cifrado:</strong> Se define en <code>config.yaml</code>. Sin ella, los datos son irrecuperables.</li>
-            <li><strong>TLS:</strong> Se recomienda usar HTTPS en producción (proxy inverso con Nginx/Caddy).</li>
           </ul>
         </div>
-
         <div class="manual-section">
           <h3>💡 Casos de uso</h3>
           <div class="manual-subsection">
             <h4>API key de terceros</h4>
-            <p>Guarda tu API key de OpenAI, Stripe, o cualquier servicio:</p>
-            <pre>securevault-cli set opencodezen/api-key "sk-IgM5Nmbo61HTmEo..."
+            <pre>securevault-cli set opencodezen/api-key "sk-..."
 export OPENCODEZEN_KEY=$(securevault-cli get opencodezen/api-key)</pre>
           </div>
           <div class="manual-subsection">
             <h4>Rotación de credenciales</h4>
-            <p>Actualiza un secreto sin tocar código ni configuración:</p>
             <pre>securevault-cli set produccion/bd/password "nueva-contraseña-2026"</pre>
-            <p>La app que lo consume solo necesita reiniciarse para obtener el nuevo valor.</p>
           </div>
           <div class="manual-subsection">
-            <h4>CI/CD (GitHub Actions, GitLab CI)</h4>
+            <h4>CI/CD</h4>
             <ol>
-              <li>Genera una API key desde SecureVault (tab API Keys o CLI)</li>
-              <li>En tu pipeline, úsala para autenticarte:</li>
+              <li>Genera una API key desde SecureVault</li>
+              <li>En tu pipeline, úsala para autenticarte</li>
             </ol>
-            <pre>API_KEY=$(securevault-cli get ci-cd/api-key -s https://vault.tudominio.com)
-export DATABASE_URL=$(securevault-cli get produccion/bd/password)</pre>
           </div>
         </div>
-
         <div class="manual-section">
-          <h3>❓ Preguntas frecuentes</h3>
-          <div class="manual-subsection">
-            <p><strong>¿Puedo recuperar la clave de cifrado si la pierdo?</strong></p>
-            <p>No. Si pierdes la clave de cifrado (<code>config.yaml</code> → <code>encryption.key</code>), los datos almacenados son irrecuperables. Haz backup seguro de ese archivo.</p>
-          </div>
-          <div class="manual-subsection">
-            <p><strong>¿Los secretos se muestran en texto plano en la web?</strong></p>
-            <p>Solo cuando pulsas "Ver" explícitamente, y solo en tu sesión. Por defecto se muestran como <code>••••••••</code>.</p>
-          </div>
-          <div class="manual-subsection">
-            <p><strong>¿Puedo compartir un vault con otro usuario?</strong></p>
-            <p>Actualmente cada usuario tiene sus propios vaults. El uso compartido es una funcionalidad futura.</p>
-          </div>
-          <div class="manual-subsection">
-            <p><strong>¿Es seguro usar HTTP en lugar de HTTPS?</strong></p>
-            <p>Para desarrollo local sí. En producción, configura un proxy inverso con TLS (Caddy, Nginx, Traefik).</p>
-          </div>
+          <h3>❓ FAQ</h3>
+          <div class="manual-subsection"><p><strong>¿Puedo recuperar la clave de cifrado si la pierdo?</strong></p><p>No. Haz backup seguro de <code>config.yaml</code>.</p></div>
+          <div class="manual-subsection"><p><strong>¿Los secretos se muestran en texto plano?</strong></p><p>Solo cuando pulsas "Ver" explícitamente.</p></div>
+          <div class="manual-subsection"><p><strong>¿Puedo compartir un vault?</strong></p><p>Actualmente no. Es una funcionalidad futura.</p></div>
         </div>
-
         <div class="manual-section manual-footer">
-          <p style="text-align:center;color:var(--text-muted);font-size:12px;margin:0">
-            SecureVault v1.0 · Documentación generada el 16/7/2026 · 
-            <a href="https://github.com/ogarridojimenez/securevault" target="_blank" style="color:var(--primary)">GitHub</a>
-          </p>
+          <p style="text-align:center;color:var(--text-muted);font-size:12px;margin:0">SecureVault v1.0 · <a href="https://github.com/ogarridojimenez/securevault" target="_blank" style="color:var(--primary)">GitHub</a></p>
         </div>
-
       </div>
     </div>
-
   </div>
+
 </div>
 
+<!-- Toast -->
 <div id="toast" class="toast"></div>
 
 <script>
 const API = 'http://localhost:8080/api/v1';
-let STATE = { token: null, refreshToken: null, userId: null };
+let STATE = { token: null, refreshToken: null, userId: null, userEmail: null };
 
-// ─── Auth ────────────────────────────────────────────────────────
+// ─── View management ─────────────────────────────
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showLanding() { showView('landingView'); STATE.token=null; }
+function showAuth() { showView('authView'); document.getElementById('loginEmail').focus(); }
+function showApp() {
+  showView('appView');
+  document.getElementById('userEmail').textContent = STATE.userEmail || '✓ Autenticado';
+  loadVaults();
+}
+
+// ─── Auth ─────────────────────────────────────────
 async function api(path, opts={}) {
   const h = {'Content-Type':'application/json', ...opts.headers};
   if(STATE.token) h['Authorization'] = `Bearer ${STATE.token}`;
@@ -405,69 +664,59 @@ async function tryRefresh() {
     const r = await fetch(API+'/auth/refresh', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({refresh_token:STATE.refreshToken})});
     if(!r.ok) return false;
     const d = await r.json();
-    STATE.token = d.access_token;
-    STATE.refreshToken = d.refresh_token;
-    saveSession();
-    return true;
+    STATE.token = d.access_token; STATE.refreshToken = d.refresh_token;
+    saveSession(); return true;
   } catch { return false; }
 }
 function saveSession() {
   localStorage.setItem('sv_token', STATE.token);
   localStorage.setItem('sv_refresh', STATE.refreshToken);
   localStorage.setItem('sv_user', STATE.userId);
+  localStorage.setItem('sv_email', STATE.userEmail);
 }
 function loadSession() {
   STATE.token = localStorage.getItem('sv_token');
   STATE.refreshToken = localStorage.getItem('sv_refresh');
   STATE.userId = localStorage.getItem('sv_user');
-}
-function updateAuthBadge() {
-  const el = document.getElementById('authStatus');
-  if(STATE.token) { el.textContent = '✓ Autenticado'; el.className = 'auth-badge logged'; }
-  else { el.textContent = 'No autenticado'; el.className = 'auth-badge'; }
+  STATE.userEmail = localStorage.getItem('sv_email');
 }
 
 async function login() {
-  const email = document.getElementById('loginEmail').value;
+  const email = document.getElementById('loginEmail').value.trim();
   const pwd = document.getElementById('loginPassword').value;
-  if(!email||!pwd) return showMsg('Email y contraseña requeridos','error');
+  if(!email||!pwd) return showMsg('Email y contraseña requeridos');
   try {
     const d = await api('/auth/login', {method:'POST', body:JSON.stringify({email,password:pwd})});
-    STATE.token=d.access_token; STATE.refreshToken=d.refresh_token; STATE.userId=d.user_id;
-    saveSession(); updateAuthBadge(); showApp();
-    toast('Sesión iniciada','success'); loadVaults();
-  } catch(e) { showMsg(e.message,'error'); }
+    STATE.token=d.access_token; STATE.refreshToken=d.refresh_token;
+    STATE.userId=d.user_id; STATE.userEmail=email;
+    saveSession(); showApp();
+    toast('Sesión iniciada','success');
+  } catch(e) { showMsg(e.message); }
 }
 async function register() {
-  const email = document.getElementById('loginEmail').value;
+  const email = document.getElementById('loginEmail').value.trim();
   const pwd = document.getElementById('loginPassword').value;
-  if(!email||!pwd) return showMsg('Email y contraseña requeridos','error');
+  if(!email||!pwd) return showMsg('Email y contraseña requeridos');
   try {
     await api('/auth/register', {method:'POST', body:JSON.stringify({email,password:pwd})});
     toast('Registrado correctamente. Inicia sesión.','success');
     document.getElementById('loginPassword').value='';
-  } catch(e) { showMsg(e.message,'error'); }
+    document.getElementById('authMessage').textContent='';
+  } catch(e) { showMsg(e.message); }
 }
 function logout() {
-  STATE.token=null; STATE.refreshToken=null; STATE.userId=null;
-  localStorage.removeItem('sv_token'); localStorage.removeItem('sv_refresh'); localStorage.removeItem('sv_user');
-  updateAuthBadge(); showAuth();
+  STATE.token=null; STATE.refreshToken=null; STATE.userId=null; STATE.userEmail=null;
+  localStorage.removeItem('sv_token'); localStorage.removeItem('sv_refresh');
+  localStorage.removeItem('sv_user'); localStorage.removeItem('sv_email');
+  showLanding();
 }
-function showMsg(m,t){ document.getElementById('authMessage').textContent=m; }
-function showAuth() {
-  document.getElementById('authView').classList.remove('hidden');
-  document.getElementById('appView').classList.add('hidden');
-}
-function showApp() {
-  document.getElementById('authView').classList.add('hidden');
-  document.getElementById('appView').classList.remove('hidden');
-}
+function showMsg(m){ document.getElementById('authMessage').textContent=m; }
 function toast(m,t) {
   const el=document.getElementById('toast'); el.textContent=m; el.className=`toast ${t} show`;
   setTimeout(()=>el.classList.remove('show'),3000);
 }
 
-// ─── Tabs ────────────────────────────────────────────────────────
+// ─── Tabs ─────────────────────────────────────────
 function switchTab(t) {
   document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.tab===t));
   document.querySelectorAll('.tab-content').forEach(el=>el.classList.toggle('hidden',el.id!=='tab'+t.charAt(0).toUpperCase()+t.slice(1)));
@@ -476,7 +725,7 @@ function switchTab(t) {
   if(t==='apikeys'&&STATE.token) loadApiKeys();
 }
 
-// ─── Vaults ──────────────────────────────────────────────────────
+// ─── Vaults ───────────────────────────────────────
 async function loadVaults() {
   try {
     const d = await api('/vaults');
@@ -491,7 +740,6 @@ async function loadVaults() {
         <td class="actions"><button class="btn-danger btn-sm" onclick="deleteVault('${v.id}')">Eliminar</button></td>`;
       list.appendChild(tr);
     });
-    // Populate selects
     [document.getElementById('secretVault'),document.getElementById('filterVault')].forEach(sel=>{
       sel.innerHTML = d.vaults.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join('');
     });
@@ -524,7 +772,7 @@ async function deleteVault(id) {
   catch(e) { toast(e.message,'error'); }
 }
 
-// ─── Secrets ─────────────────────────────────────────────────────
+// ─── Secrets ──────────────────────────────────────
 async function loadSecrets() {
   const vid = document.getElementById('filterVault').value;
   if(!vid) { document.getElementById('secretList').innerHTML=''; document.getElementById('secretsEmpty').classList.remove('hidden'); return; }
@@ -574,7 +822,7 @@ async function deleteSecret(vid,sid) {
   catch(e) { toast(e.message,'error'); }
 }
 
-// ─── API Keys ────────────────────────────────────────────────────
+// ─── API Keys ─────────────────────────────────────
 async function loadApiKeys() {
   try {
     const d = await api('/api-keys');
@@ -615,14 +863,18 @@ async function revokeKey(id) {
   catch(e) { toast(e.message,'error'); }
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
-// ─── Init ────────────────────────────────────────────────────────
+// Enter key handler
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter' && document.getElementById('authView').classList.contains('active')) login();
+});
+
+// ─── Init ─────────────────────────────────────────
 loadSession();
-updateAuthBadge();
-if(STATE.token) { showApp(); loadVaults(); }
-else { showAuth(); }
+if(STATE.token) { showApp(); }
+else { showLanding(); }
 </script>
 </body>
 </html>
