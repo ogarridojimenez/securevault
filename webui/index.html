@@ -51,6 +51,22 @@ tr:hover td{background:rgba(88,166,255,.04)}
 .key-display .label{color:var(--text-muted);font-size:11px;text-transform:uppercase;margin-bottom:4px}
 .copy-btn{cursor:pointer;color:var(--primary);font-size:12px;margin-left:8px}
 .copy-btn:hover{color:var(--primary-hover)}
+.manual-card{max-width:720px;margin:0 auto}
+.manual-section{border-top:1px solid var(--border);padding:16px 0}
+.manual-section h3{font-size:15px;margin-bottom:8px;color:var(--primary)}
+.manual-section p{font-size:13px;line-height:1.6;color:var(--text);margin-bottom:8px}
+.manual-section ul,.manual-section ol{margin:4px 0 12px 20px;font-size:13px;line-height:1.6}
+.manual-section li{margin-bottom:4px}
+.manual-section code{background:var(--bg);padding:2px 6px;border-radius:3px;font-size:12px;color:var(--primary)}
+.manual-section pre{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px;overflow-x:auto;font-family:'SF Mono','Cascadia Code',monospace;font-size:12px;line-height:1.5;margin:8px 0;color:var(--text)}
+.manual-section pre code{background:none;padding:0;color:var(--text)}
+.manual-subsection{margin:12px 0}
+.manual-subsection h4{font-size:13px;margin-bottom:4px;color:var(--text)}
+.manual-note{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);border-radius:var(--radius);padding:10px 14px;margin:8px 0;font-size:13px;line-height:1.5}
+.manual-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+.manual-table th,.manual-table td{padding:6px 10px;border:1px solid var(--border);text-align:left}
+.manual-table th{background:var(--bg);font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:500}
+.manual-footer{margin-top:8px;border-top:1px solid var(--border);padding:12px 0}
 @media(max-width:640px){.form-row{flex-direction:column}.main{padding:16px}}
 </style>
 </head>
@@ -84,6 +100,7 @@ tr:hover td{background:rgba(88,166,255,.04)}
       <div class="tab active" data-tab="vaults" onclick="switchTab('vaults')">Vaults</div>
       <div class="tab" data-tab="secrets" onclick="switchTab('secrets')">Secretos</div>
       <div class="tab" data-tab="apikeys" onclick="switchTab('apikeys')">API Keys</div>
+      <div class="tab" data-tab="manual" onclick="switchTab('manual')">Manual</div>
     </div>
 
     <!-- TAB: VAULTS -->
@@ -137,6 +154,230 @@ tr:hover td{background:rgba(88,166,255,.04)}
         <div id="apikeysEmpty" class="empty-state hidden"><p>No hay API keys.</p></div>
       </div>
     </div>
+
+    <!-- TAB: MANUAL -->
+    <div id="tabManual" class="tab-content hidden">
+      <div class="card manual-card">
+
+        <h2 style="margin-top:0">📘 Manual de usuario — SecureVault</h2>
+
+        <div class="manual-section">
+          <h3>🔷 ¿Qué es SecureVault?</h3>
+          <p><strong>SecureVault</strong> es un gestor de secretos cifrados. Permite almacenar, recuperar y gestionar de forma segura cualquier información sensible: API keys, contraseñas de bases de datos, tokens de servicios, certificados, etc.</p>
+          <p>Todo el contenido se cifra con <strong>AES-256-GCM</strong> antes de almacenarse en PostgreSQL. Solo el servidor (que posee la clave de cifrado en <code>config.yaml</code>) puede descifrarlo.</p>
+          <p>Proporciona tres formas de acceso:</p>
+          <ul>
+            <li><strong>Web UI</strong> — interfaz gráfica en el navegador</li>
+            <li><strong>CLI</strong> — línea de comandos para automatización</li>
+            <li><strong>API REST</strong> — integración programática desde otras aplicaciones</li>
+          </ul>
+        </div>
+
+        <div class="manual-section">
+          <h3>🚀 Comenzar</h3>
+          <p>El servidor debe estar corriendo. Una vez iniciado, abre tu navegador en:</p>
+          <pre>http://localhost:8080/</pre>
+          <p><strong>Requisitos:</strong></p>
+          <ul>
+            <li>Servidor SecureVault en ejecución</li>
+            <li>PostgreSQL 18+ con base <code>securevault</code></li>
+            <li>Clave de cifrado en <code>config.yaml</code></li>
+          </ul>
+          <div class="manual-note">
+            <strong>📌 Nota:</strong> La primera vez debes registrarte (email + contraseña). Luego inicia sesión con esas credenciales.
+          </div>
+        </div>
+
+        <div class="manual-section">
+          <h3>🌐 Web UI</h3>
+          <p>Tras iniciar sesión verás tres pestañas:</p>
+
+          <div class="manual-subsection">
+            <h4>📁 Vaults</h4>
+            <p>Los <strong>vaults</strong> son carpetas que agrupan secretos por ámbito (ej: <code>produccion</code>, <code>staging</code>, <code>desarrollo</code>).</p>
+            <ol>
+              <li>Escribe un nombre para el vault</li>
+              <li>Añade una descripción opcional</li>
+              <li>Pulsa <strong>Crear</strong></li>
+              <li>Verás el vault en la tabla con el número de secretos que contiene</li>
+              <li>Pulsa <strong>Eliminar</strong> para borrar el vault y todos sus secretos</li>
+            </ol>
+          </div>
+
+          <div class="manual-subsection">
+            <h4>🔐 Secretos</h4>
+            <p>Los <strong>secretos</strong> son pares nombre/valor que se almacenan cifrados.</p>
+            <p><strong>Añadir secreto:</strong></p>
+            <ol>
+              <li>Selecciona un vault del desplegable</li>
+              <li>Escribe un nombre (ej: <code>db/password</code>, <code>api-key</code>)</li>
+              <li>Escribe el valor secreto</li>
+              <li>Pulsa <strong>Guardar</strong></li>
+            </ol>
+            <p><strong>Ver secreto:</strong> Pulsa <strong>Ver</strong> para mostrar/ocultar el valor descifrado.</p>
+            <p><strong>Borrar secreto:</strong> Pulsa <strong>Borrar</strong> para eliminarlo permanentemente.</p>
+            <div class="manual-note">
+              <strong>⚠️</strong> Los valores se muestran como <code>••••••••</code> por defecto. Solo se descifran al pulsar "Ver".
+            </div>
+          </div>
+
+          <div class="manual-subsection">
+            <h4>🔑 API Keys</h4>
+            <p>Las <strong>API Keys</strong> son tokens de acceso programático. Sirven para que scripts y aplicaciones se autentiquen sin usar contraseña.</p>
+            <ol>
+              <li>Escribe un nombre descriptivo (ej: <code>ci-cd</code>, <code>monitoring</code>)</li>
+              <li>Pulsa <strong>Generar</strong></li>
+              <li><strong>Copia la clave inmediatamente</strong> — solo se muestra una vez</li>
+              <li>Pulsa <strong>Revocar</strong> para invalidar una API key</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="manual-section">
+          <h3>💻 CLI</h3>
+          <p>El binario <code>securevault-cli</code> permite gestionar secretos desde la terminal. Ideal para scripts CI/CD y automatización.</p>
+
+          <div class="manual-subsection">
+            <h4>Login</h4>
+            <pre>securevault-cli login -e usuario@email.com -p contraseña -s http://localhost:8080</pre>
+            <p>Guarda un token de acceso en <code>~/.vault_token</code> para comandos posteriores.</p>
+          </div>
+
+          <div class="manual-subsection">
+            <h4>Comandos principales</h4>
+            <table class="manual-table">
+              <tr><th>Comando</th><th>Descripción</th></tr>
+              <tr><td><code>login</code></td><td>Iniciar sesión y guardar token</td></tr>
+              <tr><td><code>register</code></td><td>Crear una cuenta nueva</td></tr>
+              <tr><td><code>set &lt;vault/name&gt; &lt;value&gt;</code></td><td>Guardar un secreto cifrado</td></tr>
+              <tr><td><code>get &lt;vault/name&gt;</code></td><td>Recuperar y descifrar un secreto</td></tr>
+              <tr><td><code>list &lt;vault&gt;</code></td><td>Listar secretos de un vault</td></tr>
+              <tr><td><code>export</code></td><td>Exportar todos los secretos (JSON)</td></tr>
+              <tr><td><code>api-key create &lt;name&gt;</code></td><td>Generar una API key programática</td></tr>
+            </table>
+          </div>
+
+          <div class="manual-subsection">
+            <h4>Ejemplos CLI</h4>
+            <pre># Guardar contraseña de BD
+securevault-cli set produccion/bd/password "postgres:SuperSecret123"
+
+# Recuperar API key para usarla
+export API_KEY=$(securevault-cli get opencodezen/api-key)
+open code --api-key "$API_KEY"
+
+# Listar secretos de staging
+securevault-cli list staging
+
+# Exportar todo (para backup)
+securevault-cli export > backup.json</pre>
+          </div>
+        </div>
+
+        <div class="manual-section">
+          <h3>📡 API REST</h3>
+          <p>Todas las funcionalidades están expuestas como API REST. Usa JWT Bearer para autenticación.</p>
+
+          <div class="manual-subsection">
+            <h4>Endpoints principales</h4>
+            <table class="manual-table">
+              <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+              <tr><td>POST</td><td><code>/api/v1/auth/register</code></td><td>Registrar usuario</td></tr>
+              <tr><td>POST</td><td><code>/api/v1/auth/login</code></td><td>Iniciar sesión → JWT</td></tr>
+              <tr><td>POST</td><td><code>/api/v1/auth/refresh</code></td><td>Renovar token</td></tr>
+              <tr><td>GET</td><td><code>/api/v1/vaults</code></td><td>Listar vaults</td></tr>
+              <tr><td>POST</td><td><code>/api/v1/vaults</code></td><td>Crear vault</td></tr>
+              <tr><td>DELETE</td><td><code>/api/v1/vaults/{id}</code></td><td>Eliminar vault</td></tr>
+              <tr><td>GET</td><td><code>/api/v1/vaults/{id}/secrets</code></td><td>Listar secretos (cifrados)</td></tr>
+              <tr><td>POST</td><td><code>/api/v1/vaults/{id}/secrets</code></td><td>Crear secreto</td></tr>
+              <tr><td>GET</td><td><code>/api/v1/vaults/{id}/secrets/{sid}</code></td><td>Obtener secreto (descifrado)</td></tr>
+              <tr><td>DELETE</td><td><code>/api/v1/vaults/{id}/secrets/{sid}</code></td><td>Eliminar secreto</td></tr>
+              <tr><td>GET</td><td><code>/api/v1/api-keys</code></td><td>Listar API keys</td></tr>
+              <tr><td>POST</td><td><code>/api/v1/api-keys</code></td><td>Generar API key</td></tr>
+              <tr><td>PUT</td><td><code>/api/v1/api-keys/{id}/revoke</code></td><td>Revocar API key</td></tr>
+            </table>
+          </div>
+
+          <div class="manual-subsection">
+            <h4>Ejemplo API (curl)</h4>
+            <pre># 1. Login
+curl -s -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"usuario@email.com","password":"MiPassword"}' | jq .
+
+# 2. Obtener secreto
+TOKEN="eyJhbGciOiJIUzI1NiIs..."
+curl -s http://localhost:8080/api/v1/vaults/{vault_id}/secrets/{secret_id} \
+  -H "Authorization: Bearer $TOKEN" | jq .</pre>
+          </div>
+        </div>
+
+        <div class="manual-section">
+          <h3>🔒 Seguridad</h3>
+          <ul>
+            <li><strong>Cifrado en reposo:</strong> AES-256-GCM, nonce único por secreto. Los datos en PostgreSQL son bytes cifrados, ilegibles sin la clave.</li>
+            <li><strong>Autenticación:</strong> JWT con refresh tokens. Las contraseñas se almacenan con Argon2id (hash resistente a GPU/ASIC).</li>
+            <li><strong>API Keys:</strong> Tokens de acceso directo para automatización. Se pueden revocar individualmente.</li>
+            <li><strong>Clave de cifrado:</strong> Se define en <code>config.yaml</code>. Sin ella, los datos son irrecuperables.</li>
+            <li><strong>TLS:</strong> Se recomienda usar HTTPS en producción (proxy inverso con Nginx/Caddy).</li>
+          </ul>
+        </div>
+
+        <div class="manual-section">
+          <h3>💡 Casos de uso</h3>
+          <div class="manual-subsection">
+            <h4>API key de terceros</h4>
+            <p>Guarda tu API key de OpenAI, Stripe, o cualquier servicio:</p>
+            <pre>securevault-cli set opencodezen/api-key "sk-IgM5Nmbo61HTmEo..."
+export OPENCODEZEN_KEY=$(securevault-cli get opencodezen/api-key)</pre>
+          </div>
+          <div class="manual-subsection">
+            <h4>Rotación de credenciales</h4>
+            <p>Actualiza un secreto sin tocar código ni configuración:</p>
+            <pre>securevault-cli set produccion/bd/password "nueva-contraseña-2026"</pre>
+            <p>La app que lo consume solo necesita reiniciarse para obtener el nuevo valor.</p>
+          </div>
+          <div class="manual-subsection">
+            <h4>CI/CD (GitHub Actions, GitLab CI)</h4>
+            <ol>
+              <li>Genera una API key desde SecureVault (tab API Keys o CLI)</li>
+              <li>En tu pipeline, úsala para autenticarte:</li>
+            </ol>
+            <pre>API_KEY=$(securevault-cli get ci-cd/api-key -s https://vault.tudominio.com)
+export DATABASE_URL=$(securevault-cli get produccion/bd/password)</pre>
+          </div>
+        </div>
+
+        <div class="manual-section">
+          <h3>❓ Preguntas frecuentes</h3>
+          <div class="manual-subsection">
+            <p><strong>¿Puedo recuperar la clave de cifrado si la pierdo?</strong></p>
+            <p>No. Si pierdes la clave de cifrado (<code>config.yaml</code> → <code>encryption.key</code>), los datos almacenados son irrecuperables. Haz backup seguro de ese archivo.</p>
+          </div>
+          <div class="manual-subsection">
+            <p><strong>¿Los secretos se muestran en texto plano en la web?</strong></p>
+            <p>Solo cuando pulsas "Ver" explícitamente, y solo en tu sesión. Por defecto se muestran como <code>••••••••</code>.</p>
+          </div>
+          <div class="manual-subsection">
+            <p><strong>¿Puedo compartir un vault con otro usuario?</strong></p>
+            <p>Actualmente cada usuario tiene sus propios vaults. El uso compartido es una funcionalidad futura.</p>
+          </div>
+          <div class="manual-subsection">
+            <p><strong>¿Es seguro usar HTTP en lugar de HTTPS?</strong></p>
+            <p>Para desarrollo local sí. En producción, configura un proxy inverso con TLS (Caddy, Nginx, Traefik).</p>
+          </div>
+        </div>
+
+        <div class="manual-section manual-footer">
+          <p style="text-align:center;color:var(--text-muted);font-size:12px;margin:0">
+            SecureVault v1.0 · Documentación generada el 16/7/2026 · 
+            <a href="https://github.com/ogarridojimenez/securevault" target="_blank" style="color:var(--primary)">GitHub</a>
+          </p>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </div>
 
